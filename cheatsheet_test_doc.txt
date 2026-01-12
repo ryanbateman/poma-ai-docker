@@ -1,0 +1,10 @@
+This is a test document for Poma AI Cheatsheet generation.
+Poma AI is a tool specifically designed to optimize RAG pipelines.
+It uses intelligent chunking to create high-quality context for LLMs.
+The quick brown fox jumps over the lazy dog.
+Ahab chased the white whale, Moby Dick, across the seven seas.
+The whale was white and very large.
+Poma helps capture this context in 'Chunksets'.
+Cheatsheets are summaries generated from these Chunksets.
+This is enough text to generate at least one chunk and chunkset.
+End of the document.

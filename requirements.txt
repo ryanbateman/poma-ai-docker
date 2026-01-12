@@ -1,2 +1,5 @@
 poma
 weaviate-client
+langchain
+langchain-community
+langchain-ollama

@@ -1,5 +1,0 @@
-This is a sample document about Poma AI.
-Poma AI optimizes RAG pipelines by using intelligent chunking.
-It creates chunksets that preserve the structural hierarchy of the document.
-This helps in reducing hallucinations and saving tokens.
-Weaviate is a vector database that stores these chunks for retrieval.

@@ -19,10 +19,6 @@ import pathlib
 import inspect
 
 def main():
-    print("Inspecting Poma Class...")
-    print(dir(poma.Poma))
-    print(f"Signature: {inspect.signature(poma.Poma.start_chunk_file)}")
-    
     # helper for v3/v4 client difference - attempting v3 style first or v4 generic
     client = weaviate.connect_to_custom(
         http_host="weaviate",
@@ -40,39 +36,6 @@ def main():
     if client.collections.exists("PomaChunkset"):
         client.collections.delete("PomaChunkset")
         
-    # Create PomaChunkset collection
-    chunkset_collection = client.collections.create(
-        name="PomaChunkset",
-        properties=[
-            weaviate.classes.config.Property(name="content", data_type=weaviate.classes.config.DataType.TEXT),
-            weaviate.classes.config.Property(name="source", data_type=weaviate.classes.config.DataType.TEXT),
-        ]
-    )
-    
-    # Create PomaChunk collection with cross-reference
-    chunk_collection = client.collections.create(
-        name="PomaChunk",
-        properties=[
-            weaviate.classes.config.Property(name="content", data_type=weaviate.classes.config.DataType.TEXT),
-            weaviate.classes.config.Property(name="source", data_type=weaviate.classes.config.DataType.TEXT),
-        ],
-        references=[
-            weaviate.classes.config.ReferenceProperty(
-                name="inChunkset",
-                target_collection="PomaChunkset"
-            )
-        ]
-    )
-    
-    # Add reverse reference to PomaChunkset (hasChunks)
-    # Note: In Weaviate v4, we can add references to existing collections
-    client.collections.delete("PomaChunkset") # Re-creating to ensure clean slate property wise or utilize config update
-    # Actually simpler to just verify schema. For now, let's redefine with references or use config.add_reference
-    
-    # Re-approach: Definition with references. 
-    # Circular references in creation can be tricky. Standard pattern: Create classes, then add reference properties, or create one then the other.
-    # Weaviate handles string targets, so we can define them.
-    
     client.collections.delete("PomaChunk") 
     client.collections.delete("PomaChunkset") # Ensure deleted
 
@@ -114,9 +77,10 @@ def main():
     poma_client = poma.Poma(api_key=POMA_API_KEY)
 
     # 2. Upload and Start Chunking
-    print("Starting chunking job for test_doc.txt...")
+    test_file = "cheatsheet_test_doc.txt"
+    print(f"Starting chunking job for {test_file}...")
     try:
-        abs_path = os.path.abspath("test_doc.txt")
+        abs_path = os.path.abspath(test_file)
         print(f"Uploading file: {abs_path}")
         job = poma_client.start_chunk_file(pathlib.Path(abs_path))
         print(f"Job started: {job}")
@@ -174,7 +138,8 @@ def main():
             batch.add_object(
                 properties={
                     "content": content,
-                    "source": source
+                    "source": source,
+                    "chunk_index": c_idx # Added
                 },
                 uuid=c_uuid
             )
@@ -193,7 +158,8 @@ def main():
             batch.add_object(
                 properties={
                     "content": content,
-                    "source": source
+                    "source": source,
+                    "chunkset_index": cs_idx # Added
                 },
                 uuid=cs_uuid
             )
@@ -239,9 +205,9 @@ def main():
     response_c = chunk_collection.query.bm25(
         query=query_text, 
         limit=1, 
-        return_properties=["content"],
+        return_properties=["content", "chunk_index"], # Added chunk_index
         return_references=[
-            QueryReference(link_on="inChunkset", return_properties=["content"])
+            QueryReference(link_on="inChunkset", return_properties=["content", "chunkset_index"]) # Added chunkset_index
         ]
     )
     
