@@ -1,0 +1,2 @@
+poma
+weaviate-client
