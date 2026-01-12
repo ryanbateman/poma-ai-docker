@@ -234,7 +234,6 @@ def main():
     # 6. Query to Verify
     query_text = "Poma"
     print(f"Querying Chunks for '{query_text}'...")
-    print(f"Querying Chunks for '{query_text}'...")
     from weaviate.classes.query import QueryReference
     
     response_c = chunk_collection.query.bm25(
@@ -252,11 +251,18 @@ def main():
         # v4 returns references as objects if requested or checked)
         # Note: references might be returned differently depending on client setup.
         
+    # ... (skipping to end of function)
+    
     print(f"Querying Chunksets for '{query_text}'...")
     response_cs = chunkset_collection.query.bm25(query=query_text, limit=1)
     
     for obj in response_cs.objects:
         print(f" [Chunkset] {obj.properties['content'][:100]}...")
+
+    # Close clients
+    client.close()
+    if hasattr(poma_client, 'close'):
+        poma_client.close()
 
 if __name__ == "__main__":
     main()
