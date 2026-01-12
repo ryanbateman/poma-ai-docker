@@ -52,7 +52,6 @@ def main():
 
     # 2. Upload and Start Chunking
     print("Starting chunking job for test_doc.txt...")
-    # Assuming start_chunk_file returns a job ID or object
     try:
         abs_path = os.path.abspath("test_doc.txt")
         print(f"Uploading file: {abs_path}")
