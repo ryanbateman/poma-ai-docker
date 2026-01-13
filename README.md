@@ -107,3 +107,6 @@ Poma AI is designed to optimize RAG pipelines by utilizing intelligent chunking.
 
 ## Contributing
 Feel free to open issues or submit pull requests to improve the integration examples.
+
+## Acknowledgements
+This project was generated largely through **Antigravity** with the assistance of AI coding. The code was reviewed and validated by **Ryan Bateman**.
