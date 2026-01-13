@@ -77,7 +77,7 @@ def main():
     poma_client = poma.Poma(api_key=POMA_API_KEY)
 
     # 2. Upload and Start Chunking
-    test_file = "cheatsheet_test_doc.txt"
+    test_file = "moby_dick.txt"
     print(f"Starting chunking job for {test_file}...")
     try:
         abs_path = os.path.abspath(test_file)
