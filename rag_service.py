@@ -24,6 +24,7 @@ def get_weaviate_client():
 
 def ensure_schema(client):
     # Idempotent schema creation
+    # 1. Create collections without references first
     if not client.collections.exists("PomaChunk"):
         client.collections.create(
             name="PomaChunk",
@@ -31,9 +32,6 @@ def ensure_schema(client):
                 wvc.config.Property(name="content", data_type=wvc.config.DataType.TEXT),
                 wvc.config.Property(name="source", data_type=wvc.config.DataType.TEXT),
                 wvc.config.Property(name="chunk_index", data_type=wvc.config.DataType.INT),
-            ],
-            references=[
-                wvc.config.ReferenceProperty(name="inChunkset", target_collection="PomaChunkset")
             ]
         )
         
@@ -44,10 +42,21 @@ def ensure_schema(client):
                 wvc.config.Property(name="content", data_type=wvc.config.DataType.TEXT),
                 wvc.config.Property(name="source", data_type=wvc.config.DataType.TEXT),
                 wvc.config.Property(name="chunkset_index", data_type=wvc.config.DataType.INT),
-            ],
-            references=[
-                wvc.config.ReferenceProperty(name="hasChunks", target_collection="PomaChunk")
             ]
+        )
+
+    # 2. Add references after both exist
+    # Note: Weaviate v4 allows adding properties to existing collections
+    chunk_col = client.collections.get("PomaChunk")
+    if "inChunkset" not in [p.name for p in chunk_col.config.get().references]:
+        chunk_col.config.add_reference(
+            wvc.config.ReferenceProperty(name="inChunkset", target_collection="PomaChunkset")
+        )
+
+    chunkset_col = client.collections.get("PomaChunkset")
+    if "hasChunks" not in [p.name for p in chunkset_col.config.get().references]:
+        chunkset_col.config.add_reference(
+            wvc.config.ReferenceProperty(name="hasChunks", target_collection="PomaChunk")
         )
 
 def ingest_document(file_path: pathlib.Path):
@@ -205,7 +214,7 @@ def query_rag(query: str, model_provider: str = "ollama"):
         if model_provider == "gemini":
             try:
                 # Use default credentials from environment
-                llm = VertexAI(model_name="gemini-1.5-flash")
+                llm = VertexAI(model_name="gemini-2-5-pro")
                 return llm.invoke(prompt)
             except Exception as e:
                 return f"Error initializing Gemini: {e}"

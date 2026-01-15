@@ -23,13 +23,43 @@ if ! command -v gcloud &> /dev/null; then
 fi
 
 # 2. Authenticate/Config (Start)
+TARGET_PROJECT=$1
+
+if [ -n "$TARGET_PROJECT" ]; then
+    echo "Using provided project ID: $TARGET_PROJECT"
+    # Verify project exists/access
+    if ! gcloud projects describe $TARGET_PROJECT &> /dev/null; then
+        echo "Error: Project '$TARGET_PROJECT' not found or not accessible."
+        exit 1
+    fi
+    # Set project for this session/command context if needed, or just warn user
+    # Ideally we just ensure commands use it, but gcloud config set is global.
+    # We will verify it matches current or ask to switch?
+    # Simpler: Just rely on gcloud config, but if arg provided, check mismatch.
+    
+    CURRENT=$(gcloud config get-value project)
+    if [ "$CURRENT" != "$TARGET_PROJECT" ]; then
+        echo "Switching active gcloud project to $TARGET_PROJECT..."
+        gcloud config set project $TARGET_PROJECT
+    fi
+fi
+
 echo "[1/5] Checking Google Cloud Project..."
 CURRENT_PROJECT=$(gcloud config get-value project)
 echo "Current Project: $CURRENT_PROJECT"
-read -p "Proceed with this project? (y/n) " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+
+if [ -z "$CURRENT_PROJECT" ]; then
+    echo "Error: No project selected in gcloud config and no argument provided."
+    echo "Usage: ./deploy.sh [PROJECT_ID]"
     exit 1
+fi
+
+if [ -z "$TARGET_PROJECT" ]; then
+    read -p "Proceed with this project? (y/n) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        exit 1
+    fi
 fi
 
 # 3. Create Firewall Rules (8081 for API, 8080 for Weaviate)
@@ -49,6 +79,7 @@ gcloud compute instances create $INSTANCE_NAME \
     --image-family=$IMAGE_FAMILY \
     --image-project=$IMAGE_PROJECT \
     --tags=poma-api,http-server \
+    --scopes=https://www.googleapis.com/auth/cloud-platform \
     --quiet || echo "Instance likely exists, continuing..."
 
 # 5. Provisioning & Deployment
