@@ -6,7 +6,7 @@ from weaviate.classes.query import QueryReference
 from poma import Poma
 from langchain_community.llms import Ollama
 from langchain_ollama import OllamaLLM
-from langchain_google_vertexai import VertexAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 # Shared Configuration
 POMA_API_KEY = os.getenv("POMA_API_KEY")
@@ -213,8 +213,11 @@ def query_rag(query: str, model_provider: str = "ollama"):
         
         if model_provider == "gemini":
             try:
-                # Use default credentials from environment
-                llm = VertexAI(model_name="gemini-2-5-pro")
+                # Use default credentials from environment (Vertex AI backend)
+                llm = ChatGoogleGenerativeAI(
+                    model="gemini-2.5-pro",
+                    convert_system_message_to_human=True
+                )
                 return llm.invoke(prompt)
             except Exception as e:
                 return f"Error initializing Gemini: {e}"
