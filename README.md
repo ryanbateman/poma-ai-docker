@@ -1,112 +1,114 @@
-# Poma AI Docker Environment
+# Poma Cloud RAG Framework
 
-A fully containerized environment for testing and integrating [Poma AI](https://poma.ai/)—a tool for optimizing RAG pipelines through intelligent chunking and "Cheatsheet" generation.
+A deployable, API-driven framework for building Retrieval-Augmented Generation (RAG) pipelines using [Poma AI](https://poma.ai/).
 
-This project demonstrates how to build an advanced Retrieval-Augmented Generation (RAG) pipeline that combines **Poma's SDK**, a **Weaviate** vector database, and a local **Ollama** LLM to deliver high-quality, context-aware answers.
+This project transforms the Poma SDK into a **Cloud-Ready Service** that integrates:
+*   **Poma AI**: For intelligent document chunking and "Cheatsheet" generation.
+*   **Weaviate**: As the vector database for storing Chunksets.
+*   **Google Gemini (Vertex AI)**: For high-quality, long-context inference.
+*   **FastAPI**: Providing a robust REST API for ingestion and querying.
 
-## Project Goals
+## Features
 
-1.  **Dockerization**: Provide a consistent, isolated environment (`python:3.11-slim`) for Poma SDK development.
-2.  **RAG Integration**: Demonstrate ingestion of documents into Weaviate using Poma's `Chunk` and `Chunkset` logic, utilizing bi-directional cross-references.
-3.  **Cheatsheet RAG**: Implement a "Cheatsheet" pipeline where Poma dynamically generates high-density summaries (Cheatsheets) from retrieved context before passing them to an LLM.
-4.  **Local LLM Support**: Integrate with a locally running Ollama instance (e.g., `gemma3:4b`) for privacy-focused inference.
+*   **Cloud Deployment**: One-click provisioning to Google Compute Engine via `deploy.sh`.
+*   **Hybrid RAG**: Combines Poma's hierarchical `Chunkset` retrieval with Gemini's reasoning.
+*   **REST API**: Simple endpoints for `ingest`, `query`, and `stats`.
+*   **Helper Tools**: Python scripts for easy document uploading and monitoring.
 
-## Key Components
+---
 
-### Scripts
+## 🚀 Cloud Deployment
 
-*   **`rag_test.py`**: The primary ingestion script.
-    *   Uploads a text file to Poma.
-    *   Retrieves intelligent **Chunks** and **Chunksets**.
-    *   Stores them in Weaviate with appropriate indices (`chunk_index`, `chunkset_index`).
-    *   Links Chunks and Chunksets using Weaviate Cross-References (`hasChunks`, `inChunkset`).
-*   **`cheatsheet_rag.py`**: The advanced retrieval & inference script.
-    *   Takes a user query (e.g., "What does Poma do?").
-    *   Performs a hybrid search in Weaviate for relevant **Chunksets**.
-    *   Uses Poma's `create_cheatsheets` API to generate a concise summary tailored to the query.
-    *   Sends this summary to a local **Ollama** LLM (via `host.docker.internal`) to generate the final answer.
-*   **`debug_weaviate.py`**: A utility script to inspect database statistics (object counts) and verify cross-reference links between Chunks and Chunksets.
+The included scripts allow you to deploy the entire stack (App + Weaviate) to Google Cloud Platform (GCE) in minutes.
 
-### Infrastructure
+### 1. Prerequisites
+*   **Google Cloud Account** & Project.
+*   **[gcloud CLI](https://cloud.google.com/sdk/docs/install)** installed and authenticated.
+*   **Poma API Key**: Get one at [poma.ai](https://poma.ai).
 
-*   **`docker-compose.yml`**: Orchestrates two services:
-    *   `app`: The Python application container (where scripts run).
-    *   `weaviate`: The vector database instance (v1.27.0).
-*   **`requirements.txt`**: Python dependencies including `poma`, `weaviate-client`, and `langchain-ollama`.
+### 2. Deploy
+Run the deployment script. This will provision a VM, configure firewalls, and launch the stack.
 
-## Prerequisites
+```bash
+./deploy.sh
+```
+*Follow the prompts. By default, this deploys to `europe-west1-b`.*
 
-1.  **Docker Desktop** installed and running.
-2.  **Poma API Key**: You need an API key from [Poma AI](https://poma.ai/).
-3.  **Ollama**: Installed on your host machine with a model pulled (default configuration uses `gemma3:4b`, but is configurable).
-    ```bash
-    ollama pull gemma3:4b
-    ```
+### 3. Verification
+Once complete, the script generates a `deployment_info.json` file with your server's details:
 
-## Setup & Installation
+```json
+{
+  "instance_name": "poma-rag-framework",
+  "external_ip": "34.123.45.67",
+  "api_endpoint": "http://34.123.45.67:8081",
+  ...
+}
+```
 
-1.  **Clone the repository**:
-    ```bash
-    git clone https://github.com/ryanbateman/poma-ai-docker.git
-    cd poma-ai-docker
-    ```
+---
 
-2.  **Configure Environment**:
-    Create a `.env` file in the root directory (copied from `.env.example`) and add your Poma API Key:
-    ```bash
-    cp .env.example .env
-    ```
-    *Edit `.env` and set `POMA_API_KEY=your_key_here`.*
+## 📖 Usage Guide
 
-3.  **Build and Start**:
+You can interact with the deployed API using the provided helper script or standard HTTP tools.
+
+### 1. Upload & Ingest Documents
+Use the `upload_tool.py` script to upload a file (`.pdf`, `.txt`, etc.). It automatically finds your server using `deployment_info.json` and tracks the Poma indexing job.
+
+```bash
+# Usage: python upload_tool.py <path_to_file>
+python upload_tool.py documents/whitepaper.pdf
+```
+*Output will show the Poma Job ID and the number of Chunks/Chunksets created.*
+
+### 2. Query the RAG Pipeline
+Ask questions against your uploaded data using `query_tool.py`. It reads your configuration and handles the API request for you.
+
+**Cloud Usage (Gemini via Vertex AI):**
+```bash
+# Explicitly use the 'gemini' provider
+python query_tool.py "What are the key conclusions?" --provider gemini
+```
+
+**Local Usage (Ollama):**
+```bash
+# Defaults to 'ollama' provider
+python query_tool.py "What is Poma?" --config local_test_config.json
+```
+
+**Manual (Curl):**
+If you prefer raw requests:
+```bash
+export API_URL="http://34.123.45.67:8081"
+curl -X POST "$API_URL/query" \
+     -H "Content-Type: application/json" \
+     -d '{"query": "...", "model_provider": "gemini"}'
+```
+
+### 3. Check Stats
+See how many chunksets are currently indexed.
+```bash
+python stats_tool.py
+```
+*Output displays the total count of Chunks and Chunksets in Weaviate.*
+
+---
+
+## 🛠️ Local Development
+
+You can still run the stack locally using Docker Compose for development and testing.
+
+1.  **Configure**: Create a `.env` file with your `POMA_API_KEY`.
+2.  **Start**:
     ```bash
     docker-compose up -d --build
     ```
-
-## Usage Guide
-
-Run all scripts inside the Docker container using `docker-compose exec`.
-
-### 1. Ingest Data
-First, populate the database. The default script uses `cheatsheet_test_doc.txt` (a small sample) for demonstration.
-
-```bash
-docker-compose exec app python rag_test.py
-```
-*Output: Confirms upload, job completion, and storage of Chunks/Chunksets in Weaviate.*
-
-### 2. Verify Data (Optional)
-Check that data was stored correctly:
-```bash
-docker-compose exec app python debug_weaviate.py
-```
-
-### 3. Run the Cheatsheet RAG Pipeline
-Query the system. This triggers the full flow: **Retrieval -> Cheatsheet Generation -> Ollama Inference**.
-
-```bash
-docker-compose exec app python cheatsheet_rag.py "What is Poma designed to do?"
-```
-
-*Example Output:*
-```text
-Connecting to Weaviate...
-Searching Weaviate for: 'What is Poma designed to do?'
-Found 3 relevant chunksets...
-Generating Poma Cheatsheet...
-
---- Cheatsheet Context ---
-Poma AI is a tool specifically designed to optimize RAG pipelines...
---------------------------
-
-Querying Ollama (gemma3:4b)...
-
-=== LLM Response ===
-Poma AI is designed to optimize RAG pipelines by utilizing intelligent chunking...
-```
-
-## Contributing
-Feel free to open issues or submit pull requests to improve the integration examples.
+3.  **Local Testing**:
+    The API will be available at `http://localhost:8081`. You can use `upload_tool.py` locally by creating a compatible config:
+    ```bash
+    # Run against localhost
+    python upload_tool.py test.txt --config local_test_config.json
+    ```
 
 ## Acknowledgements
-This project was generated largely through **Antigravity** with the assistance of AI coding. The code was reviewed and validated by **Ryan Bateman**.
+This project was largely generated through **Antigravity** with the assistance of AI coding. The code was reviewed and validated by **Ryan Bateman**.

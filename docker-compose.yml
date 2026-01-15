@@ -33,7 +33,9 @@ services:
       - WEAVIATE_URL=http://weaviate:8080
     depends_on:
       - weaviate
-    command: [ "tail", "-f", "/dev/null" ] # Keep container running for interactive exec
+    ports:
+      - "8081:80"
+    command: [ "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80" ]
 
 volumes:
   weaviate_data:

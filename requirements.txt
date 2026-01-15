@@ -3,3 +3,8 @@ weaviate-client
 langchain
 langchain-community
 langchain-ollama
+fastapi
+uvicorn
+python-multipart
+google-cloud-aiplatform
+langchain-google-vertexai

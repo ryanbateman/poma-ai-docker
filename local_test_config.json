@@ -1,0 +1,7 @@
+{
+  "instance_name": "local-test",
+  "zone": "local",
+  "external_ip": "localhost",
+  "api_endpoint": "http://localhost:8081",
+  "weaviate_endpoint": "http://localhost:8080"
+}
