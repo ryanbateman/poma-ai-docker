@@ -17,7 +17,7 @@ This project transforms the Poma SDK into a **Cloud-Ready Service** that integra
 
 ---
 
-## 🚀 Cloud Deployment
+## Cloud Deployment
 
 The included scripts allow you to deploy the entire stack (App + Weaviate) to Google Cloud Platform (GCE) in minutes.
 
@@ -51,7 +51,7 @@ Once complete, the script generates a `deployment_info.json` file with your serv
 
 ---
 
-## 📖 Usage Guide
+## Usage Guide
 
 Interact with the deployed API using the provided python helper tools. These tools automatically read your `deployment_info.json` configuration.
 
@@ -87,7 +87,7 @@ python stats_tool.py
 
 ---
 
-## 🛠️ Local Development
+## Local Development
 
 You can still run the stack locally using Docker Compose for development and testing.
 
