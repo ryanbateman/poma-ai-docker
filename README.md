@@ -2,7 +2,7 @@
 
 A deployable, API-driven framework for building Retrieval-Augmented Generation (RAG) pipelines using [Poma AI](https://poma.ai/).
 
-This project transforms the Poma SDK into a **Cloud-Ready Service** that integrates:
+This project transforms the Poma SDK into a **Cloud-Ready Service** (for local or Cloud deployment) that integrates:
 *   **Poma AI**: For intelligent document chunking and "Cheatsheet" generation.
 *   **Weaviate**: As the vector database for storing Chunksets.
 *   **Google Gemini (Vertex AI)**: For high-quality, long-context inference (using `langchain-google-genai`).
